@@ -56,90 +56,10 @@
     var taskList = []
     var taskDetail = []
     var timetable = [];
-    json = jQuery.getJSON('rundec_prod_jobs.json')
-    // json = {
-    //   "items": [{
-    //       "job_schedule_hour": "21",
-    //       "name": "common-jobs",
-    //       "averageDuration": "1355839",
-    //       "job_schedule_minute": "00",
-    //       "job_schedule_weekday": "*",
-    //       "job_schedule_seconds": "0"
-    //     },
-    //     {
-    //       "job_schedule_hour": "10",
-    //       "name": "Merc-Perf-ETL",
-    //       "averageDuration": "482180",
-    //       "job_schedule_minute": "00",
-    //       "job_schedule_weekday": "*",
-    //       "job_schedule_seconds": "0"
-    //     },
-    //     {
-    //       "job_schedule_hour": "1,5,9,13,17,21",
-    //       "name": "Merchant-Tags-Pers-CassadraETL-Populate-Data-Near-RealTime",
-    //       "averageDuration": "606870",
-    //       "job_schedule_minute": "00",
-    //       "job_schedule_weekday": "*",
-    //       "job_schedule_seconds": "0"
-    //     },
-    //     {
-    //       "job_schedule_hour": "10",
-    //       "name": "Perf-jobs-ETL",
-    //       "averageDuration": "2328157",
-    //       "job_schedule_minute": "00",
-    //       "job_schedule_weekday": "*",
-    //       "job_schedule_seconds": "0"
-    //     },
-    //     {
-    //       "job_schedule_hour": "09",
-    //       "name": "PNP-MAPPING-EXPORT",
-    //       "averageDuration": "1507816",
-    //       "job_schedule_minute": "00",
-    //       "job_schedule_weekday": "*",
-    //       "job_schedule_seconds": "0"
-    //     },
-    //     {
-    //       "job_schedule_hour": "00",
-    //       "name": "privilege-jobs",
-    //       "averageDuration": "3561436",
-    //       "job_schedule_minute": "07",
-    //       "job_schedule_weekday": "*",
-    //       "job_schedule_seconds": "0"
-    //     },
-    //     {
-    //       "job_schedule_hour": "19",
-    //       "name": "STREAMING-PERF-ETL",
-    //       "averageDuration": "427067",
-    //       "job_schedule_minute": "00",
-    //       "job_schedule_weekday": "*",
-    //       "job_schedule_seconds": "0"
-    //     },
-    //     {
-    //       "job_schedule_hour": "2,6,10,14,18,22",
-    //       "name": "TTV-MOVIE-CASSANDRA-M3-ETL-AUTO-UPDATE",
-    //       "averageDuration": "616262",
-    //       "job_schedule_minute": "00",
-    //       "job_schedule_weekday": "*",
-    //       "job_schedule_seconds": "0"
-    //     },
-    //     {
-    //       "job_schedule_hour": "06",
-    //       "name": "TTV-SERIES-SIM-SCRIPT-DEPRECATED",
-    //       "averageDuration": "54709",
-    //       "job_schedule_minute": "00",
-    //       "job_schedule_weekday": "TUE",
-    //       "job_schedule_seconds": "0"
-    //     },
-    //     {
-    //       "job_schedule_hour": "18",
-    //       "name": "tv-jobs",
-    //       "averageDuration": "1404537",
-    //       "job_schedule_minute": "00",
-    //       "job_schedule_weekday": "*",
-    //       "job_schedule_seconds": "0"
-    //     }
-    //   ]
-    // }
+
+    jQuery.getJSON('rundec_prod_jobs.json', function(data) {
+      json = data;
+    });
 
     function isInterval(hour) {
       return isNaN(hour)
