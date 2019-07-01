@@ -1,0 +1,245 @@
+<!doctype html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ETL jobs</title>
+  <link rel="stylesheet" href="styles/timetablejs.css">
+  <link rel="stylesheet" href="styles/custom.css">
+
+  <script src="scripts/timetable.js"></script>
+  <script src="scripts/underscore-min.js"></script>
+  <script src="scripts/moment.js"></script>
+  <script src="scripts/jquery-3.4.1.min.js"></script>
+</head>
+
+<body>
+
+  <div>
+    <h1>ETL jobs</h1>
+    <span id='daily'>&#9639; Daily</span>
+    <span id='weekly'>&#9640; Weekly</span>
+  </div>
+
+  <hr>
+  </hr></br>
+  <h1 align='center'>Mon</h1>
+  <div class="timetable" id="timetable-0"></div>
+  <hr>
+  </hr></br>
+  <h1 align='center'>Tue</h1>
+  <div class="timetable" id="timetable-1"></div>
+  <hr>
+  </hr></br>
+  <h1 align='center'>Wed</h1>
+  <div class="timetable" id="timetable-2"></div>
+  <hr>
+  </hr></br>
+  <h1 align='center'>Thu</h1>
+  <div class="timetable" id="timetable-3"></div>
+  <hr>
+  </hr></br>
+  <h1 align='center'>Fri</h1>
+  <div class="timetable" id="timetable-4"></div>
+  <hr>
+  </hr></br>
+  <h1 align='center'>Sat</h1>
+  <div class="timetable" id="timetable-5"></div>
+  <hr>
+  </hr></br>
+  <h1 align='center'>Sun</h1>
+  <div class="timetable" id="timetable-6"></div>
+
+  <script>
+    var week = ["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"];
+    var taskList = []
+    var taskDetail = []
+    var timetable = [];
+    json = jQuery.getJSON('rundec_prod_jobs.json')
+    // json = {
+    //   "items": [{
+    //       "job_schedule_hour": "21",
+    //       "name": "common-jobs",
+    //       "averageDuration": "1355839",
+    //       "job_schedule_minute": "00",
+    //       "job_schedule_weekday": "*",
+    //       "job_schedule_seconds": "0"
+    //     },
+    //     {
+    //       "job_schedule_hour": "10",
+    //       "name": "Merc-Perf-ETL",
+    //       "averageDuration": "482180",
+    //       "job_schedule_minute": "00",
+    //       "job_schedule_weekday": "*",
+    //       "job_schedule_seconds": "0"
+    //     },
+    //     {
+    //       "job_schedule_hour": "1,5,9,13,17,21",
+    //       "name": "Merchant-Tags-Pers-CassadraETL-Populate-Data-Near-RealTime",
+    //       "averageDuration": "606870",
+    //       "job_schedule_minute": "00",
+    //       "job_schedule_weekday": "*",
+    //       "job_schedule_seconds": "0"
+    //     },
+    //     {
+    //       "job_schedule_hour": "10",
+    //       "name": "Perf-jobs-ETL",
+    //       "averageDuration": "2328157",
+    //       "job_schedule_minute": "00",
+    //       "job_schedule_weekday": "*",
+    //       "job_schedule_seconds": "0"
+    //     },
+    //     {
+    //       "job_schedule_hour": "09",
+    //       "name": "PNP-MAPPING-EXPORT",
+    //       "averageDuration": "1507816",
+    //       "job_schedule_minute": "00",
+    //       "job_schedule_weekday": "*",
+    //       "job_schedule_seconds": "0"
+    //     },
+    //     {
+    //       "job_schedule_hour": "00",
+    //       "name": "privilege-jobs",
+    //       "averageDuration": "3561436",
+    //       "job_schedule_minute": "07",
+    //       "job_schedule_weekday": "*",
+    //       "job_schedule_seconds": "0"
+    //     },
+    //     {
+    //       "job_schedule_hour": "19",
+    //       "name": "STREAMING-PERF-ETL",
+    //       "averageDuration": "427067",
+    //       "job_schedule_minute": "00",
+    //       "job_schedule_weekday": "*",
+    //       "job_schedule_seconds": "0"
+    //     },
+    //     {
+    //       "job_schedule_hour": "2,6,10,14,18,22",
+    //       "name": "TTV-MOVIE-CASSANDRA-M3-ETL-AUTO-UPDATE",
+    //       "averageDuration": "616262",
+    //       "job_schedule_minute": "00",
+    //       "job_schedule_weekday": "*",
+    //       "job_schedule_seconds": "0"
+    //     },
+    //     {
+    //       "job_schedule_hour": "06",
+    //       "name": "TTV-SERIES-SIM-SCRIPT-DEPRECATED",
+    //       "averageDuration": "54709",
+    //       "job_schedule_minute": "00",
+    //       "job_schedule_weekday": "TUE",
+    //       "job_schedule_seconds": "0"
+    //     },
+    //     {
+    //       "job_schedule_hour": "18",
+    //       "name": "tv-jobs",
+    //       "averageDuration": "1404537",
+    //       "job_schedule_minute": "00",
+    //       "job_schedule_weekday": "*",
+    //       "job_schedule_seconds": "0"
+    //     }
+    //   ]
+    // }
+
+    function isInterval(hour) {
+      return isNaN(hour)
+    }
+
+    function generateTime(name, sub_name, start, end, isInterval, isAllDay) {
+      return {
+        "name": name,
+        "sub_name": sub_name,
+        "start": start,
+        "end": end,
+        "isInterval": isInterval,
+        "isAllDay": isAllDay
+      }
+    }
+
+    function populateTime(dayIndex, task) {
+      weekday = task['job_schedule_weekday']
+      hour = task['job_schedule_hour']
+      minute = task['job_schedule_minute']
+      second = task['job_schedule_seconds']
+      execTime = task['averageDuration']
+
+
+      if (isInterval(hour)) {
+        interval = hour.split(",")
+        _.each(interval, function(val, i) {
+          startTime = moment().hours(val).minutes(minute).seconds(second)
+          endTime = startTime.clone().add(execTime, 'milliseconds')
+          const remainder = 30 - (endTime.minute() % 30);
+          if (weekday == '*') {
+            taskDetail[dayIndex].push(generateTime(task['name'],
+              task['name'],
+              startTime,
+              moment(endTime).add(remainder, "minutes"),
+              true, true
+            ))
+            taskList[dayIndex].push(task['name'])
+          } else if (weekday == week[dayIndex]) {
+            taskDetail[dayIndex].push(generateTime(task['name'], task['name'], startTime, moment(endTime).add(remainder, "minutes"), true, false))
+            taskList[dayIndex].push(task['name'])
+          }
+
+        });
+      } else {
+        startTime = moment().hours(hour).minutes(minute).seconds(second)
+        endTime = startTime.clone().add(execTime, 'milliseconds')
+        const remainder = 30 - (endTime.minute() % 30);
+
+        if (weekday == '*') {
+          taskDetail[dayIndex].push(generateTime(task['name'], task['name'], startTime, moment(endTime).add(remainder, "minutes"), false, true))
+          taskList[dayIndex].push(task['name'])
+        } else if (weekday == week[dayIndex]) {
+          taskDetail[dayIndex].push(generateTime(task['name'], task['name'], startTime, moment(endTime).add(remainder, "minutes"), false, false))
+          taskList[dayIndex].push(task['name'])
+        }
+      }
+    }
+
+
+    function addtimetable(dayIndex, task) {
+      populateTime(dayIndex, task)
+    }
+
+    _.each(week, function(day, dayIndex) {
+      taskDetail[dayIndex] = []
+      taskList[dayIndex] = []
+      _.each(json.items, function(val, i) {
+        addtimetable(dayIndex, val)
+      });
+
+      timetable[dayIndex] = new Timetable();
+      timetable[dayIndex].setScope(9, 8)
+
+      timetable[dayIndex].addLocations(_.uniq(taskList[dayIndex]))
+
+      _.each(taskDetail[dayIndex], function(val, i) {
+        if (val['isAllDay']) {
+          timetable[dayIndex].addEvent(val['sub_name'].split('-')[0],
+            val['name'],
+            val['start'].toDate(),
+            val['end'].toDate(), {
+              url: '#',
+              class: 'weekday'
+            });
+        } else {
+          timetable[dayIndex].addEvent(val['sub_name'].split('-')[0],
+            val['name'],
+            val['start'].toDate(),
+            val['end'].toDate(), {
+              url: '#'
+            });
+        }
+
+
+      });
+      var renderer = new Timetable.Renderer(timetable[dayIndex]);
+      renderer.draw('#timetable-' + dayIndex);
+    });
+  </script>
+</body>
+
+</html>
