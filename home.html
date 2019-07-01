@@ -53,113 +53,116 @@
 
   <script>
     $( document ).ready(function() {
-      var week = ["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"];
-      var taskList = []
-      var taskDetail = []
-      var timetable = [];
-
       jQuery.getJSON('rundec_prod_jobs.json', function(data) {
         var jsonFile = data;
-      });
 
-      function isInterval(hour) {
-        return isNaN(hour)
-      }
+        var week = ["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"];
+        var taskList = []
+        var taskDetail = []
+        var timetable = [];
 
-      function generateTime(name, sub_name, start, end, isInterval, isAllDay) {
-        return {
-          "name": name,
-          "sub_name": sub_name,
-          "start": start,
-          "end": end,
-          "isInterval": isInterval,
-          "isAllDay": isAllDay
+        function isInterval(hour) {
+          return isNaN(hour)
         }
-      }
 
-      function populateTime(dayIndex, task) {
-        weekday = task['job_schedule_weekday']
-        hour = task['job_schedule_hour']
-        minute = task['job_schedule_minute']
-        second = task['job_schedule_seconds']
-        execTime = task['averageDuration']
+        function generateTime(name, sub_name, start, end, isInterval, isAllDay) {
+          return {
+            "name": name,
+            "sub_name": sub_name,
+            "start": start,
+            "end": end,
+            "isInterval": isInterval,
+            "isAllDay": isAllDay
+          }
+        }
+
+        function populateTime(dayIndex, task) {
+          weekday = task['job_schedule_weekday']
+          hour = task['job_schedule_hour']
+          minute = task['job_schedule_minute']
+          second = task['job_schedule_seconds']
+          execTime = task['averageDuration']
 
 
-        if (isInterval(hour)) {
-          interval = hour.split(",")
-          _.each(interval, function(val, i) {
-            startTime = moment().hours(val).minutes(minute).seconds(second)
+          if (isInterval(hour)) {
+            interval = hour.split(",")
+            _.each(interval, function(val, i) {
+              startTime = moment().hours(val).minutes(minute).seconds(second)
+              endTime = startTime.clone().add(execTime, 'milliseconds')
+              const remainder = 30 - (endTime.minute() % 30);
+              if (weekday == '*') {
+                taskDetail[dayIndex].push(generateTime(task['name'],
+                  task['name'],
+                  startTime,
+                  moment(endTime).add(remainder, "minutes"),
+                  true, true
+                ))
+                taskList[dayIndex].push(task['name'])
+              } else if (weekday == week[dayIndex]) {
+                taskDetail[dayIndex].push(generateTime(task['name'], task['name'], startTime, moment(endTime).add(remainder, "minutes"), true, false))
+                taskList[dayIndex].push(task['name'])
+              }
+
+            });
+          } else {
+            startTime = moment().hours(hour).minutes(minute).seconds(second)
             endTime = startTime.clone().add(execTime, 'milliseconds')
             const remainder = 30 - (endTime.minute() % 30);
+
             if (weekday == '*') {
-              taskDetail[dayIndex].push(generateTime(task['name'],
-                task['name'],
-                startTime,
-                moment(endTime).add(remainder, "minutes"),
-                true, true
-              ))
+              taskDetail[dayIndex].push(generateTime(task['name'], task['name'], startTime, moment(endTime).add(remainder, "minutes"), false, true))
               taskList[dayIndex].push(task['name'])
             } else if (weekday == week[dayIndex]) {
-              taskDetail[dayIndex].push(generateTime(task['name'], task['name'], startTime, moment(endTime).add(remainder, "minutes"), true, false))
+              taskDetail[dayIndex].push(generateTime(task['name'], task['name'], startTime, moment(endTime).add(remainder, "minutes"), false, false))
               taskList[dayIndex].push(task['name'])
             }
-
-          });
-        } else {
-          startTime = moment().hours(hour).minutes(minute).seconds(second)
-          endTime = startTime.clone().add(execTime, 'milliseconds')
-          const remainder = 30 - (endTime.minute() % 30);
-
-          if (weekday == '*') {
-            taskDetail[dayIndex].push(generateTime(task['name'], task['name'], startTime, moment(endTime).add(remainder, "minutes"), false, true))
-            taskList[dayIndex].push(task['name'])
-          } else if (weekday == week[dayIndex]) {
-            taskDetail[dayIndex].push(generateTime(task['name'], task['name'], startTime, moment(endTime).add(remainder, "minutes"), false, false))
-            taskList[dayIndex].push(task['name'])
           }
         }
-      }
 
 
-      function addtimetable(dayIndex, task) {
-        populateTime(dayIndex, task)
-      }
+        function addtimetable(dayIndex, task) {
+          populateTime(dayIndex, task)
+        }
 
-      _.each(week, function(day, dayIndex) {
-        taskDetail[dayIndex] = []
-        taskList[dayIndex] = []
-        _.each(jsonFile.items, function(val, i) {
-          addtimetable(dayIndex, val)
+        _.each(week, function(day, dayIndex) {
+          taskDetail[dayIndex] = []
+          taskList[dayIndex] = []
+          _.each(jsonFile.items, function(val, i) {
+            addtimetable(dayIndex, val)
+          });
+
+          timetable[dayIndex] = new Timetable();
+          timetable[dayIndex].setScope(9, 8)
+
+          timetable[dayIndex].addLocations(_.uniq(taskList[dayIndex]))
+
+          _.each(taskDetail[dayIndex], function(val, i) {
+            if (val['isAllDay']) {
+              timetable[dayIndex].addEvent(val['sub_name'].split('-')[0],
+                val['name'],
+                val['start'].toDate(),
+                val['end'].toDate(), {
+                  url: '#',
+                  class: 'weekday'
+                });
+            } else {
+              timetable[dayIndex].addEvent(val['sub_name'].split('-')[0],
+                val['name'],
+                val['start'].toDate(),
+                val['end'].toDate(), {
+                  url: '#'
+                });
+            }
+
+
+          });
+          var renderer = new Timetable.Renderer(timetable[dayIndex]);
+          renderer.draw('#timetable-' + dayIndex);
         });
 
-        timetable[dayIndex] = new Timetable();
-        timetable[dayIndex].setScope(9, 8)
-
-        timetable[dayIndex].addLocations(_.uniq(taskList[dayIndex]))
-
-        _.each(taskDetail[dayIndex], function(val, i) {
-          if (val['isAllDay']) {
-            timetable[dayIndex].addEvent(val['sub_name'].split('-')[0],
-              val['name'],
-              val['start'].toDate(),
-              val['end'].toDate(), {
-                url: '#',
-                class: 'weekday'
-              });
-          } else {
-            timetable[dayIndex].addEvent(val['sub_name'].split('-')[0],
-              val['name'],
-              val['start'].toDate(),
-              val['end'].toDate(), {
-                url: '#'
-              });
-          }
-
-
-        });
-        var renderer = new Timetable.Renderer(timetable[dayIndex]);
-        renderer.draw('#timetable-' + dayIndex);
       });
+
+
     });
 
   </script>
